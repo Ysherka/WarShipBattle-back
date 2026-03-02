@@ -1,4 +1,16 @@
 from pydantic import BaseModel
+from fastapi import WebSocket
 
-class User(BaseModel):
-    username: str
+from models.Field import BaseField, OwnField, EnemyField
+
+
+# class UserBase():
+#     username: str
+#     websocket: WebSocket
+#
+class User:
+    def __init__(self):
+        self.username: str | None = None
+        self.websocket: WebSocket | None = None
+        self.own_field: OwnField = OwnField()
+        self.enemy_field: EnemyField = EnemyField()
