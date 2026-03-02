@@ -1,3 +1,5 @@
+from functools import singledispatchmethod
+
 from models.Field import BaseField, OwnField, EnemyField
 from models.FieldState import FieldState
 from models.Ship import Ship
@@ -5,10 +7,11 @@ from models.ShipOrientation import ShipOrientation
 from models.User import User
 
 
+# TODO корабли как шлюхи на хуе - вертятся туда сюда и пропадают
 class Game:
-    def __init__(self):
-        self.user: User | None = None
-        self.enemy: User | None = None
+    def __init__(self, user: User | None = None, enemy: User | None = None):
+        self.user: User | None = user
+        self.enemy: User | None = enemy
 
     """
     здесь инты обозначают размер корабля
@@ -76,9 +79,29 @@ class Game:
 
         return ships
 
+    # @singledispatchmethod
+    # def add_ships(self, arg):
+    #     raise NotImplementedError("Тип не поддерживается")
+
+    # @add_ships.register(list)
     def add_ships(self, ships: list[Ship]):
         for ship in ships:
             self.user.own_field.add_ship(ship)
+
+    # @add_ships.register(list)
+    def add_ships_int(self, field: list[list[int]]):
+        ships: list[Ship] = self.field_to_ship_list(field)
+        for ship in ships:
+            self.user.own_field.add_ship(ship)
+
+    # @singledispatchmethod
+    # def handle(self, arg):
+    #     raise NotImplementedError("Тип не поддерживается")
+    #
+    # @handle.register(int)
+    # def _(self, arg):
+    #     return f"Обработано число: {arg * 2}"
+
 
     def shoot(self, x: int, y: int):
         self.user.own_field.shoot(x, y)
