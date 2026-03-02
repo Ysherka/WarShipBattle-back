@@ -24,15 +24,15 @@ class OwnField(BaseField):
         self.ships: List[Ship] = []
     
     def add_ship(self, ship: Ship) -> bool:
-        if not self._can_place_ship(ship):
+        if not self.__can_place_ship(ship):
             return False
         
         self.ships.append(ship)
         for x, y in ship.decks_coordinates:
             self.cells[x][y] = FieldState.UNDAMAGED
         return True
-    
-    def _can_place_ship(self, ship: Ship) -> bool:
+
+    def __can_place_ship(self, ship: Ship) -> bool:
         # Проверка границ поля
         for x, y in ship.decks_coordinates:
             if not (0 <= x < self.FIELD_SIZE and 0 <= y < self.FIELD_SIZE):
@@ -53,9 +53,9 @@ class OwnField(BaseField):
             self.cells[x][y] = FieldState.DAMAGED
             
             # Проверяем, уничтожен ли корабль
-            ship = self._get_ship_at(x, y)
-            if ship and self._is_ship_destroyed(ship):
-                self._mark_ship_as_destroyed(ship)
+            ship = self.__get_ship_at(x, y)
+            if ship and self.__is_ship_destroyed(ship):
+                self.__mark_ship_as_destroyed(ship)
                 return True, ship
             return True, None
             
@@ -64,18 +64,18 @@ class OwnField(BaseField):
             return False, None
         
         return False, None  # Повторный выстрел по той же клетке
-    
-    def _get_ship_at(self, x: int, y: int) -> Optional[Ship]:
+
+    def __get_ship_at(self, x: int, y: int) -> Optional[Ship]:
         for ship in self.ships:
             if (x, y) in ship.decks_coordinates:
                 return ship
         return None
-    
-    def _is_ship_destroyed(self, ship: Ship) -> bool:
+
+    def __is_ship_destroyed(self, ship: Ship) -> bool:
         return all(self.cells[x][y] == FieldState.DAMAGED 
                   for x, y in ship.decks_coordinates)
-    
-    def _mark_ship_as_destroyed(self, ship: Ship) -> None:
+
+    def __mark_ship_as_destroyed(self, ship: Ship) -> None:
         for x, y in ship.decks_coordinates:
             self.cells[x][y] = FieldState.DESTROYED
     

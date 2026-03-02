@@ -3,7 +3,7 @@ name = "warshipbattle-back"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.12"
 dependencies = [
-    "fastapi[standard,standart]>=0.129.0",
+    "fastapi[standard]>=0.129.0",
 ]

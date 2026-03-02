@@ -1,7 +1,5 @@
 from enum import Enum
 
 class ShipOrientation(Enum):
-    UP = 0
-    RIGHT = 1
-    DOWN = 2
-    LEFT = 3
+    RIGHT = 0
+    DOWN = 1
