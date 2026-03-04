@@ -45,10 +45,8 @@ class RandomShipPlacer:
         for _ in range(max_attempts):
             # Случайно выбираем ориентацию
             orientation = random.choice([
-                ShipOrientation.UP,
                 ShipOrientation.RIGHT,
                 ShipOrientation.DOWN,
-                ShipOrientation.LEFT
             ])
             
             # Случайно выбираем начальные координаты

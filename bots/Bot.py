@@ -1,3 +1,5 @@
+
+
 import random
 from typing import List, Tuple, Optional, Set
 from models.Field import OwnField
@@ -10,12 +12,13 @@ from placements.RandomShipPlacer import RandomShipPlacer
 
 class Bot:
     
-    def __init__(self, name: str = "Bot", field_size: int = 10):
+    def __init__(self, name: str = "Bot", difficulty = 1, field_size: int = 10):
         self.name = name
         self.field_size = field_size
         self.my_field = OwnField(field_size)
-        self.enemy_view = OwnField(field_size) 
+        self.enemy_view = EnemyField(field_size) 
         self.ships_placed = False
+        self.difficulty = 0
         
     def place_ships(self) -> None:
         placer = RandomShipPlacer(self.field_size)
