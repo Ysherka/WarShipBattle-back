@@ -10,10 +10,10 @@ class RoomManager:
     def __init__(self) -> None:
         self.rooms: dict[str, list[Game]] = {}
 
-    def new_room(self) -> str:
+    def new_room(self) -> tuple[str, list[Game]]:
         code = self.__generate_code().upper()
         self.rooms[code] = [Game(User(), User()), Game(User(), User())]
-        return code
+        return code, self.rooms[code]
 
     def is_room_exist(self, code: str) -> bool:
         print(self.rooms)
@@ -21,12 +21,6 @@ class RoomManager:
 
     def is_room_full(self, code: str) -> bool:
         return len(self.rooms[code]) == 2
-
-    def add_users_to_games(self, code: str, user1: User, user2: User, game1: Game, game2: Game) -> None:
-        game1.user = user1
-        game1.enemy = user2
-        game2.user = user2
-        game2.enemy = user1
 
     async def connect(self, code: str, user: User) -> None:
         print("start connection")
@@ -44,17 +38,20 @@ class RoomManager:
         # self.rooms[code].append(game)
         print(f"rooms: {self.rooms}")
 
-    async def disconnect(self, code: str, game: Game) -> None:
-        if code not in self.rooms:
-            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Room code is incorrect.")
-
-        if len(self.rooms[code]) == 0:
-            del self.rooms[code]
-        else:
-            self.rooms[code].remove(game)
-
-        if len(self.rooms[code]) == 0:
-            del self.rooms[code]
+    # async def disconnect(self, code: str, user: User) -> None:
+    #     if code not in self.rooms:
+    #         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Room code is incorrect.")
+    #
+    #     room = self.rooms[code]
+    #
+    #     if len(room) == 0:
+    #         del room
+    #     else:
+    #
+    #         room.remove(game)
+    #
+    #     if len(room) == 0:
+    #         del room
 
     # async def send(self, data: dict, websocket: WebSocket) -> None:
     #     await websocket.send_json(data)

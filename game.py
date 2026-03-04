@@ -79,28 +79,16 @@ class Game:
 
         return ships
 
-    # @singledispatchmethod
-    # def add_ships(self, arg):
-    #     raise NotImplementedError("Тип не поддерживается")
-
-    # @add_ships.register(list)
     def add_ships(self, ships: list[Ship]):
-        for ship in ships:
-            self.user.own_field.add_ship(ship)
+        for ship_ in ships:
+            self.user.own_field.add_ship(ship_)
 
-    # @add_ships.register(list)
     def add_ships_int(self, field: list[list[int]]):
         ships: list[Ship] = self.field_to_ship_list(field)
-        for ship in ships:
-            self.user.own_field.add_ship(ship)
+        print("готовые корабли ", ships)
+        for ship_ in ships:
+            self.user.own_field.add_ship(ship_)
 
-    # @singledispatchmethod
-    # def handle(self, arg):
-    #     raise NotImplementedError("Тип не поддерживается")
-    #
-    # @handle.register(int)
-    # def _(self, arg):
-    #     return f"Обработано число: {arg * 2}"
 
 
     def shoot(self, x: int, y: int):
