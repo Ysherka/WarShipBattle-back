@@ -28,6 +28,7 @@ async def new_game(websocket: WebSocket):
 
         room[0].user.username = data["nickname"]
         room[0].user.avatar_id = data["photo_index"]
+        room[0].turn = True
 
         room[0].add_ships_int(user_own_field)
     except WebSocketDisconnect:
@@ -50,6 +51,7 @@ async def join(websocket: WebSocket):
 
         manager.rooms[code][1].user.username = data["nickname"]
         manager.rooms[code][1].user.avatar_id = data["photo_index"]
+        manager.rooms[code][1].turn = False
 
         manager.rooms[code][1].add_ships_int(user_own_field)
     except WebSocketDisconnect:
@@ -87,13 +89,29 @@ async def connect_to_game(websocket: WebSocket, code: str):
         await room[1].user.is_ready.wait()
         print("второй готов")
 
-        response: dict | None = None
+        response: dict | None = {}
+
+        # for i, game in enumerate(room):
+        #     if game.user == user.websocket:
+        #         response = {
+        #             "nickname": game.enemy.username,
+        #             "photo_index": game.enemy.avatar_id,
+        #             "field": game.enemy.own_field.cells,
+        #             "isOwn": False,
+        #             "myTurn": i == 0,
+        #         }
+        #         print(f"перед отправкой {i+1}-му игроку врага")
+        #         print(response)
+        #
+        # await user.websocket.send_json(response)
+
         if room[0].user.websocket == user.websocket:
             response = {
                 "nickname": room[0].enemy.username,
                 "photo_index": room[0].enemy.avatar_id,
                 "field": room[0].enemy.own_field.cells,
                 "isOwn": False,
+                "myTurn": True,
             }
             print("перед отправкой первому игроку врага")
             print(response)
@@ -104,11 +122,36 @@ async def connect_to_game(websocket: WebSocket, code: str):
                 "photo_index": room[1].enemy.avatar_id,
                 "field": room[1].enemy.own_field.cells,
                 "isOwn": False,
+                "myTurn": False,
             }
-            print("перед отправкой первому игроку врага")
+            print("перед отправкой второму игроку врага")
             print(response)
 
         await user.websocket.send_json(response)
+
+        while True:
+            print("начался основной цикл")
+            data = await user.websocket.receive_json()
+            print(f"{data=}")
+            # {shoot: [x, y]}
+            if "shoot" in data:
+                shoot: tuple[int, int] = data["shoot"]
+                row = shoot[0]
+                col = shoot[1]
+                for game in room:
+                    if game.user == user.websocket:
+                        # game.shoot()
+                        room[0].turn, room[1].turn = room[1].turn, room[0].turn
+                        turn: bool = game.turn
+                        print(f"был выстрел по координатам {row=}, {col=}")
+                        response = {
+                            "field": game.enemy.own_field.cells,
+                            "isOwn": False,
+                            "myTurn": turn,
+                        }
+                        print("после выстрела перед отправкой")
+                        print(response)
+                        await user.websocket.send_json(response)
 
     except WebSocketDisconnect:
         await websocket.close()

@@ -47,20 +47,20 @@ class OwnField(BaseField):
                             and self.cells[ny][nx] != FieldState.EMPTY):
                         return False
         return True
-    
-    def shoot(self, x: int, y: int) -> Tuple[bool, Optional[Ship]]:
-        if self.cells[x][y] == FieldState.UNDAMAGED:
-            self.cells[x][y] = FieldState.DAMAGED
+
+    def shoot(self, row: int, col: int) -> Tuple[bool, Optional[Ship]]:
+        if self.cells[row][col] == FieldState.UNDAMAGED:
+            self.cells[row][col] = FieldState.DAMAGED
             
             # Проверяем, уничтожен ли корабль
-            ship = self.__get_ship_at(x, y)
+            ship = self.__get_ship_at(row, col)
             if ship and self.__is_ship_destroyed(ship):
                 self.__mark_ship_as_destroyed(ship)
                 return True, ship
             return True, None
-            
-        elif self.cells[x][y] == FieldState.EMPTY:
-            self.cells[x][y] = FieldState.MISS
+
+        elif self.cells[row][col] == FieldState.EMPTY:
+            self.cells[row][col] = FieldState.MISS
             return False, None
         
         return False, None  # Повторный выстрел по той же клетке

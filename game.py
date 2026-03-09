@@ -12,6 +12,7 @@ class Game:
     def __init__(self, user: User | None = None, enemy: User | None = None):
         self.user: User | None = user
         self.enemy: User | None = enemy
+        self.turn: bool = True
 
     """
     здесь инты обозначают размер корабля
@@ -89,7 +90,5 @@ class Game:
         for ship_ in ships:
             self.user.own_field.add_ship(ship_)
 
-
-
-    def shoot(self, x: int, y: int):
-        self.user.own_field.shoot(x, y)
+    def shoot(self, row: int, col: int):
+        self.user.own_field.shoot(row, col)
