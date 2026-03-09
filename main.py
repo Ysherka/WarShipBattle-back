@@ -1,8 +1,3 @@
-import asyncio
-import json
-import time
-from typing import Any
-
 import numpy as np
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -31,8 +26,8 @@ async def new_game(websocket: WebSocket):
         user_own_field: list[list[int]] = data["field"]
         print(f"принял первый раз {np.array(user_own_field)}")
 
-        room[1].enemy.username = data["nickname"]
-        room[1].enemy.avatar_id = data["photo_index"]
+        room[0].user.username = data["nickname"]
+        room[0].user.avatar_id = data["photo_index"]
 
         room[0].add_ships_int(user_own_field)
     except WebSocketDisconnect:
@@ -40,7 +35,7 @@ async def new_game(websocket: WebSocket):
 
 
 @app.websocket("/join")
-async def check_code(websocket: WebSocket):
+async def join(websocket: WebSocket):
     await websocket.accept()
 
     try:
@@ -53,13 +48,12 @@ async def check_code(websocket: WebSocket):
         data = await websocket.receive_json()
         user_own_field: list[list[int]] = data["field"]
 
-        manager.rooms[code][0].enemy.username = data["nickname"]
-        manager.rooms[code][0].enemy.avatar_id = data["photo_index"]
+        manager.rooms[code][1].user.username = data["nickname"]
+        manager.rooms[code][1].user.avatar_id = data["photo_index"]
 
         manager.rooms[code][1].add_ships_int(user_own_field)
     except WebSocketDisconnect:
         await websocket.close()
-
 
 
 @app.websocket("/game-{code}")
@@ -70,15 +64,16 @@ async def connect_to_game(websocket: WebSocket, code: str):
 
     try:
         if not room[0].user.websocket:
-
+            print("первый получил вебсокет")
             user = manager.rooms[code][0].user
-            manager.rooms[code][1].enemy = user
+            manager.rooms[code][1].enemy.websocket = user.websocket
         else:
+            print("второй получил вебсокет")
             user = manager.rooms[code][1].user
-            manager.rooms[code][0].enemy = user
+            manager.rooms[code][0].enemy.websocket = user.websocket
 
         user.websocket = websocket
-        # await manager.connect(code, user)
+        user.is_ready.set()
 
         print(f"перед отправкой {np.array(user.own_field.cells)}")
         response_data = {
@@ -87,26 +82,34 @@ async def connect_to_game(websocket: WebSocket, code: str):
         }
         await user.websocket.send_json(response_data)
 
-        while True:
-            if room[0].user.websocket and room[1].user.websocket:
-                response: dict | None = None
-                if room[0].user.websocket == user.websocket:
-                    response = {
-                        "nickname": room[0].enemy.username,
-                        "photo_index": room[0].enemy.avatar_id,
-                        "field": room[0].enemy.own_field.cells,
-                        "isOwn": False,
-                    }
-                elif room[1].user.websocket == user.websocket:
-                    response = {
-                        "nickname": room[1].enemy.username,
-                        "photo_index": room[1].enemy.avatar_id,
-                        "field": room[0].enemy.own_field.cells,
-                        "isOwn": False,
-                    }
+        await room[0].user.is_ready.wait()
+        print("первый готов")
+        await room[1].user.is_ready.wait()
+        print("второй готов")
 
-                await room[0].user.websocket.send_json(response)
-                break
+        response: dict | None = None
+        if room[0].user.websocket == user.websocket:
+            response = {
+                "nickname": room[0].enemy.username,
+                "photo_index": room[0].enemy.avatar_id,
+                "field": room[0].enemy.own_field.cells,
+                "isOwn": False,
+            }
+            print("перед отправкой первому игроку врага")
+            print(response)
+
+        elif room[1].user.websocket == user.websocket:
+            response = {
+                "nickname": room[1].enemy.username,
+                "photo_index": room[1].enemy.avatar_id,
+                "field": room[1].enemy.own_field.cells,
+                "isOwn": False,
+            }
+            print("перед отправкой первому игроку врага")
+            print(response)
+
+        await user.websocket.send_json(response)
+
     except WebSocketDisconnect:
         await websocket.close()
 

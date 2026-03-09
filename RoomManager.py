@@ -12,7 +12,9 @@ class RoomManager:
 
     def new_room(self) -> tuple[str, list[Game]]:
         code = self.__generate_code().upper()
-        self.rooms[code] = [Game(User(), User()), Game(User(), User())]
+        user1: User = User()
+        user2: User = User()
+        self.rooms[code] = [Game(user1, user2), Game(user2, user1)]
         return code, self.rooms[code]
 
     def is_room_exist(self, code: str) -> bool:
