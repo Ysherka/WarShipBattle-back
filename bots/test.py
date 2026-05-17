@@ -11,8 +11,9 @@ from models.Field import OwnField
 
 def test_bot_battle():
     # Создаем двух ботов
-    bot1 = Bot(name="Bot1", difficulty=1, field_size=10)
-    bot2 = Bot(name="Bot2", difficulty=1, field_size=10)
+    bot1 = Bot(name="DiagonalBot", difficulty=2, field_size=10)
+
+    bot2 = Bot(name="HunterBot", difficulty=3, field_size=10)
     
     # Расставляем корабли случайным способом
     bot1.place_ships(method="perelman")
@@ -41,12 +42,12 @@ def test_bot_battle():
         # Делаем выстрел
         x, y = current_bot.make_move()
         print(f"{current_bot.name} стреляет в ({x}, {y})")
-        
+
         # Проверяем попадание по полю противника
         is_hit, destroyed_ship = opponent_bot.own_field.shoot(x, y)
-        
-        # Обновляем поле зрения текущего бота
-        current_bot.enemy_field.shoot_result(x, y, is_hit, destroyed_ship is not None)
+
+        # Регистрируем результат (ВАЖНО: для стратегии охотника)
+        current_bot.register_shot_result(x, y, is_hit, destroyed_ship is not None)
         
         if destroyed_ship:
             print(f"💥 {current_bot.name} уничтожил корабль длиной {destroyed_ship.length}!")
@@ -101,13 +102,16 @@ def print_field(field):
         FieldState.MISS: "○",
         FieldState.UNDAMAGED: "■",
         FieldState.DAMAGED: "▲",
-        FieldState.DESTROYED: "X"
+        FieldState.DESTROYED: "X"  # Взорванный корабль
     }
     
     size = field.FIELD_SIZE
     print("  " + " ".join(str(i) for i in range(size)))
     for y in range(size):
-        row = [symbols[field.get_cell_display(x, y)] for x in range(size)]
+        row = []
+        for x in range(size):
+            state = field.get_cell_display(x, y)
+            row.append(symbols[state])
         print(f"{y} " + " ".join(row))
 
 
