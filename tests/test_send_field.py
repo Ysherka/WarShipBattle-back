@@ -1,5 +1,3 @@
-import pytest
-
 from game import Game
 from models.User import User
 

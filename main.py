@@ -75,14 +75,21 @@ async def connect_to_game(websocket: WebSocket, code: str):
             manager.rooms[code][0].enemy.websocket = user.websocket
 
         user.websocket = websocket
-        user.is_ready.set()
 
-        print(f"перед отправкой {np.array(user.own_field.cells)}")
+        if room[0].user.websocket == user.websocket:
+            print("первый игрок")
+        else:
+            print("Второй игрок")
+
+        # print(f"перед отправкой {np.array(user.own_field.cells)}")
+        print(f"перед отправкой собственного поля")
         response_data = {
             "field": user.own_field.cells,
             "isOwn": True,
         }
         await user.websocket.send_json(response_data)
+
+        user.is_ready.set()
 
         await room[0].user.is_ready.wait()
         print("первый готов")
@@ -109,7 +116,7 @@ async def connect_to_game(websocket: WebSocket, code: str):
             response = {
                 "nickname": room[0].enemy.username,
                 "photo_index": room[0].enemy.avatar_id,
-                "field": room[0].enemy.own_field.cells,
+                "field": room[0].user.enemy_field.cells,
                 "isOwn": False,
                 "myTurn": True,
             }
@@ -120,7 +127,7 @@ async def connect_to_game(websocket: WebSocket, code: str):
             response = {
                 "nickname": room[1].enemy.username,
                 "photo_index": room[1].enemy.avatar_id,
-                "field": room[1].enemy.own_field.cells,
+                "field": room[1].user.enemy_field.cells,
                 "isOwn": False,
                 "myTurn": False,
             }
@@ -139,19 +146,27 @@ async def connect_to_game(websocket: WebSocket, code: str):
                 row = shoot[0]
                 col = shoot[1]
                 for game in room:
-                    if game.user == user.websocket:
+                    if game.user.websocket == user.websocket:
                         # game.shoot()
                         room[0].turn, room[1].turn = room[1].turn, room[0].turn
                         turn: bool = game.turn
                         print(f"был выстрел по координатам {row=}, {col=}")
                         response = {
-                            "field": game.enemy.own_field.cells,
+                            "field": game.user.enemy_field.cells,
                             "isOwn": False,
                             "myTurn": turn,
                         }
                         print("после выстрела перед отправкой")
                         print(response)
                         await user.websocket.send_json(response)
+
+                        response2 = {
+                            "field": game.enemy.own_field.cells,
+                            "isOwn": True,
+                            "myTurn": not turn,
+                        }
+                        await game.enemy.websocket.send_json(response2)
+
 
     except WebSocketDisconnect:
         await websocket.close()
