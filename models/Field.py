@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from models.FieldState import FieldState
 from models.Ship import Ship
 
+
 class BaseField(ABC):
     
     def __init__(self, field_size: int = 10):
@@ -81,6 +82,7 @@ class OwnField(BaseField):
     
     def get_cell_display(self, x: int, y: int) -> FieldState:
         return self.cells[x][y]
+
 
 class EnemyField(BaseField):
     
