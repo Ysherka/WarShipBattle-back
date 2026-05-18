@@ -4,21 +4,31 @@ from fastapi import WebSocket, WebSocketException, status
 
 from game import Game
 from models.User import User
+from bots.Bot import Bot
 
 
 class RoomManager:
     def __init__(self) -> None:
         self.rooms: dict[str, list[Game]] = {}
 
-    def new_room(self) -> tuple[str, list[Game]]:
+    def new_room(self, with_bot: bool = False) -> tuple[str, list[Game]]:
         code = self.__generate_code().upper()
-        user1: User = User()
-        user2: User = User()
-        self.rooms[code] = [Game(user1, user2), Game(user2, user1)]
+
+        if with_bot:
+            # Игра против бота
+            user = User()
+            bot = Bot(name="AI", difficulty=1)
+            bot.place_ships("random")
+            self.rooms[code] = [Game(user=user, bot=bot)]
+        else:
+            # PvP: два игрока
+            user1: User = User()
+            user2: User = User()
+            self.rooms[code] = [Game(user1, user2), Game(user2, user1)]
+
         return code, self.rooms[code]
 
     def is_room_exist(self, code: str) -> bool:
-        print(self.rooms)
         return code in self.rooms
 
     def is_room_full(self, code: str) -> bool:
@@ -54,9 +64,6 @@ class RoomManager:
     #
     #     if len(room) == 0:
     #         del room
-
-    # async def send(self, data: dict, websocket: WebSocket) -> None:
-    #     await websocket.send_json(data)
 
     @staticmethod
     def __generate_code() -> str:
