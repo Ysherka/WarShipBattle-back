@@ -30,7 +30,7 @@ class OwnField(BaseField):
         
         self.ships.append(ship)
         for x, y in ship.decks_coordinates:
-            self.cells[x][y] = FieldState.UNDAMAGED
+            self.cells[y][x] = FieldState.UNDAMAGED
         return True
 
     def __can_place_ship(self, ship: Ship) -> bool:
@@ -44,24 +44,24 @@ class OwnField(BaseField):
             for dx in [-1, 0, 1]:
                 for dy in [-1, 0, 1]:
                     nx, ny = x + dx, y + dy
-                    if (0 <= nx < self.FIELD_SIZE and 0 <= ny < self.FIELD_SIZE 
-                            and self.cells[nx][ny] != FieldState.EMPTY):
+                    if (0 <= nx < self.FIELD_SIZE and 0 <= ny < self.FIELD_SIZE
+                            and self.cells[ny][nx] != FieldState.EMPTY):
                         return False
         return True
-    
-    def shoot(self, x: int, y: int) -> Tuple[bool, Optional[Ship]]:
-        if self.cells[x][y] == FieldState.UNDAMAGED:
-            self.cells[x][y] = FieldState.DAMAGED
+
+    def shoot(self, row: int, col: int) -> Tuple[bool, Optional[Ship]]:
+        if self.cells[row][col] == FieldState.UNDAMAGED:
+            self.cells[row][col] = FieldState.DAMAGED
             
             # Проверяем, уничтожен ли корабль
-            ship = self.__get_ship_at(x, y)
+            ship = self.__get_ship_at(row, col)
             if ship and self.__is_ship_destroyed(ship):
                 self.__mark_ship_as_destroyed(ship)
                 return True, ship
             return True, None
-            
-        elif self.cells[x][y] == FieldState.EMPTY:
-            self.cells[x][y] = FieldState.MISS
+
+        elif self.cells[row][col] == FieldState.EMPTY:
+            self.cells[row][col] = FieldState.MISS
             return False, None
         
         return False, None  # Повторный выстрел по той же клетке

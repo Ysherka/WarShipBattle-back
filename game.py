@@ -13,6 +13,16 @@ class Game:
         self.user: User | None = user
         self.enemy: User | None = enemy
         self.bot: Bot | None = bot  # ◆ Композиция (Game создаёт Bot)
+        self.turn: bool = True
+
+    """
+    здесь инты обозначают размер корабля
+    0 - пусто 
+    1 - однопалубный корабль
+    2 - двухпалубный
+    3 - трехпалубный
+    4 - четырехпалубный
+    """
 
     @staticmethod
     def field_to_ship_list(field: list[list[int]]) -> list[Ship]:
@@ -76,5 +86,5 @@ class Game:
         for ship in ships:
             self.user.own_field.add_ship(ship)
 
-    def shoot(self, x: int, y: int):
-        self.user.own_field.shoot(x, y)
+    def shoot(self, row: int, col: int):
+        self.user.own_field.shoot(row, col)
