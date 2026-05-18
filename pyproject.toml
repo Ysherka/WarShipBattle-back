@@ -6,4 +6,6 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]>=0.129.0",
+    "numpy>=2.4.2",
+    "pytest>=9.0.2",
 ]

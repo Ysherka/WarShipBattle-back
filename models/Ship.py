@@ -18,7 +18,7 @@ class Ship:
                 case ShipOrientation.RIGHT:
                     self.decks_coordinates.append((self.x + i, self.y))
                 case ShipOrientation.DOWN:
-                    self.decks_coordinates.append((self.x, self.y - i))
+                    self.decks_coordinates.append((self.x, self.y + i))
 
     def __repr__(self):
         return f"Ship(x={self.x}, y={self.y}, length={self.length}, orientation={self.orientation.name})"
