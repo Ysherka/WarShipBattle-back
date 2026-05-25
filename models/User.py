@@ -11,6 +11,7 @@ class User:
         self.username: str | None = None
         self.websocket: WebSocket | None = None
         self.is_ready = asyncio.Event()
+        self.ready: bool = False
         self.info_websocket: WebSocket | None = None
         self.own_field: OwnField = OwnField()
         self.enemy_field: EnemyField = EnemyField()

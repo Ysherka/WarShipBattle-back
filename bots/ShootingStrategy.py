@@ -20,41 +20,41 @@ class ShootingStrategy:
 
         if len(hits) == 1:
             # Одно попадание — ищем направление (крест)
-            x, y = hits[0]
+            row, col = hits[0]
             candidates = []
-            for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
-                nx, ny = x + dx, y + dy
-                if (0 <= nx < enemy_field.FIELD_SIZE and
-                    0 <= ny < enemy_field.FIELD_SIZE and
-                    enemy_field.get_shot_available(nx, ny)):
-                    candidates.append((nx, ny))
+            for dr, dc in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+                nr, nc = row + dr, y + dc
+                if (0 <= nr < enemy_field.FIELD_SIZE and
+                        0 <= nc < enemy_field.FIELD_SIZE and
+                        enemy_field.get_shot_available(nr, nc)):
+                    candidates.append((nr, nc))
             if candidates:
                 return random.choice(candidates)
 
         else:
             # Несколько попаданий — определяем ориентацию и стреляем по линии
-            xs = [h[0] for h in hits]
-            ys = [h[1] for h in hits]
+            rows = [h[0] for h in hits]
+            colss = [h[1] for h in hits]
 
-            if len(set(xs)) == 1:  # Горизонтальный корабль
-                x = xs[0]
-                min_y, max_y = min(ys), max(ys)
+            if len(set(rows)) == 1:  # Горизонтальный корабль
+                row = rows[0]
+                min_col, max_col = min(cols), max(cols)
                 candidates = []
-                if enemy_field.get_shot_available(x, min_y - 1):
-                    candidates.append((x, min_y - 1))
-                if enemy_field.get_shot_available(x, max_y + 1):
-                    candidates.append((x, max_y + 1))
+                if enemy_field.get_shot_available(row, min_col - 1):
+                    candidates.append((row, min_col - 1))
+                if enemy_field.get_shot_available(row, max_col + 1):
+                    candidates.append((row, max_col + 1))
                 if candidates:
                     return random.choice(candidates)
 
-            elif len(set(ys)) == 1:  # Вертикальный корабль
-                y = ys[0]
-                min_x, max_x = min(xs), max(xs)
+            elif len(set(cols)) == 1:  # Вертикальный корабль
+                col = cols[0]
+                min_row, max_row = min(rows), max(rows)
                 candidates = []
-                if enemy_field.get_shot_available(min_x - 1, y):
-                    candidates.append((min_x - 1, y))
-                if enemy_field.get_shot_available(max_x + 1, y):
-                    candidates.append((max_x + 1, y))
+                if enemy_field.get_shot_available(min_row - 1, col):
+                    candidates.append((min_row - 1, col))
+                if enemy_field.get_shot_available(max_row + 1, col):
+                    candidates.append((max_row + 1, col))
                 if candidates:
                     return random.choice(candidates)
 
@@ -65,10 +65,10 @@ class ShootingStrategy:
     def _get_available_cells(enemy_field: EnemyField) -> List[Tuple[int, int]]:
         """Возвращает все доступные для выстрела клетки"""
         available = []
-        for x in range(enemy_field.FIELD_SIZE):
-            for y in range(enemy_field.FIELD_SIZE):
-                if enemy_field.get_shot_available(x, y):
-                    available.append((x, y))
+        for row in range(enemy_field.FIELD_SIZE):
+            for col in range(enemy_field.FIELD_SIZE):
+                if enemy_field.get_shot_available(row, col):
+                    available.append((row, col))
         return available
 
     # ==================== СТРАТЕГИИ ====================
@@ -112,28 +112,28 @@ class ShootingStrategy:
 
         # Фаза 1: Клетки (x + y) % 2 == 0 (чёрные поля шахматной доски)
         phase1 = []
-        for x in range(size):
-            for y in range(size):
-                if (x + y) % 2 == 0 and enemy_field.get_shot_available(x, y):
-                    phase1.append((x, y, x + y))
+        for row in range(size):
+            for col in range(size):
+                if (row + col) % 2 == 0 and enemy_field.get_shot_available(row, col):
+                    phase1.append((row, col, row + col))
         
         # Сортировка: сначала меньшая сумма, при равной — меньший x
         phase1.sort(key=lambda c: (c[2], c[0]))
-        
-        for x, y, _ in phase1:
-            return (x, y)
+
+        for row, col, _ in phase1:
+            return (row, col)
 
         # Фаза 2: Клетки (x + y) % 2 == 1 (белые поля)
         phase2 = []
-        for x in range(size):
-            for y in range(size):
-                if (x + y) % 2 == 1 and enemy_field.get_shot_available(x, y):
-                    phase2.append((x, y, x + y))
+        for row in range(size):
+            for col in range(size):
+                if (row + col) % 2 == 1 and enemy_field.get_shot_available(row, col):
+                    phase2.append((row, col, row + col))
         
         phase2.sort(key=lambda c: (c[2], c[0]))
-        
-        for x, y, _ in phase2:
-            return (x, y)
+
+        for row, col, _ in phase2:
+            return (row, col)
 
         # Фаза 3: Всё занято — случайно
         return ShootingStrategy.make_move_random(enemy_field)
@@ -159,11 +159,11 @@ class ShootingStrategy:
         step = phase
         grid_cells = []
         offset = (phase * 7) % step
-        
-        for x in range(offset, size, step):
-            for y in range(offset, size, step):
-                if enemy_field.get_shot_available(x, y):
-                    grid_cells.append((x, y))
+
+        for row in range(offset, size, step):
+            for col in range(offset, size, step):
+                if enemy_field.get_shot_available(row, col):
+                    grid_cells.append((row, col))
 
         random.shuffle(grid_cells)
 
@@ -177,11 +177,11 @@ class ShootingStrategy:
         return ShootingStrategy.make_move_random(enemy_field)
 
     @staticmethod
-    def update_hits(hits: List[Tuple[int, int]], x: int, y: int,
+    def update_hits(hits: List[Tuple[int, int]], row: int, col: int,
                     is_hit: bool, is_destroyed: bool) -> List[Tuple[int, int]]:
         """Обновляет список попаданий"""
         if is_hit and not is_destroyed:
-            hits.append((x, y))
+            hits.append((row, col))
         elif is_destroyed:
             return []  # Корабль уничтожен — очищаем
         return hits

@@ -1,8 +1,11 @@
+import asyncio
 import uuid
+from dataclasses import asdict
 
 from fastapi import WebSocket, WebSocketException, status
 
 from game import Game
+from models.BotConfig import BotConfig
 from models.User import User
 from bots.Bot import Bot
 
@@ -10,14 +13,26 @@ from bots.Bot import Bot
 class RoomManager:
     def __init__(self) -> None:
         self.rooms: dict[str, list[Game]] = {}
+        self._locks: dict[str, asyncio.Lock] = {}
+        self._conditions: dict[str, asyncio.Condition] = {}
 
-    def new_room(self, with_bot: bool = False) -> tuple[str, list[Game]]:
+    def get_lock(self, code: str) -> asyncio.Lock:
+        if code not in self._locks:
+            self._locks[code] = asyncio.Lock()
+        return self._locks[code]
+
+    def get_condition(self, code: str) -> asyncio.Condition:
+        if code not in self._conditions:
+            self._conditions[code] = asyncio.Condition(self.get_lock(code))
+        return self._conditions[code]
+
+    def new_room(self, bot_config: BotConfig | None = None) -> tuple[str, list[Game]]:
         code = self.__generate_code().upper()
 
-        if with_bot:
+        if bot_config:
             # Игра против бота
             user = User()
-            bot = Bot(name="AI", difficulty=1)
+            bot = Bot(**asdict(bot_config))
             bot.place_ships("random")
             self.rooms[code] = [Game(user=user, bot=bot)]
         else:

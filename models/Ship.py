@@ -2,9 +2,9 @@ from models.ShipOrientation import ShipOrientation
 
 
 class Ship:
-    def __init__(self, x: int, y: int, length: int, orientation: ShipOrientation):
-        self.x: int = x
-        self.y: int = y
+    def __init__(self, row: int, col: int, length: int, orientation: ShipOrientation):
+        self.row: int = row
+        self.col: int = col
         self.length: int = length
         self.orientation: ShipOrientation = orientation
         self.decks_coordinates: list[tuple[int, int]] = []
@@ -16,9 +16,9 @@ class Ship:
         for i in range(self.length):
             match self.orientation:
                 case ShipOrientation.RIGHT:
-                    self.decks_coordinates.append((self.x + i, self.y))
+                    self.decks_coordinates.append((self.row, self.col + i))
                 case ShipOrientation.DOWN:
-                    self.decks_coordinates.append((self.x, self.y + i))
+                    self.decks_coordinates.append((self.row + i, self.col))
 
     def __repr__(self):
-        return f"Ship(x={self.x}, y={self.y}, length={self.length}, orientation={self.orientation.name})"
+        return f"Ship(row={self.row}, col={self.col}, length={self.length}, orientation={self.orientation.name})"

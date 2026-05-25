@@ -43,18 +43,18 @@ class Bot:
         else:
             return ShootingStrategy.make_move_random(self.enemy_field, self._hits)
 
-    def register_shot_result(self, x: int, y: int, is_hit: bool, is_destroyed: bool = False) -> None:
+    def register_shot_result(self, row: int, col: int, is_hit: bool, is_destroyed: bool = False) -> None:
         """
         Регистрирует результат выстрела (для стратегии охотника).
         Вызывай этот метод ПОСЛЕ make_move, когда узнал результат.
         """
         # Обновляем поле зрения
-        self.enemy_field.shoot_result(x, y, is_hit, is_destroyed)
+        self.enemy_field.shoot_result(row, col, is_hit, is_destroyed)
 
         # Обновляем список попаданий для охотника
         if self.difficulty == 3:
             self._hits = ShootingStrategy.update_hits(
-                self._hits, x, y, is_hit, is_destroyed
+                self._hits, row, col, is_hit, is_destroyed
             )
 
             # Если корабль уничтожен — сбрасываем фазу или понижаем
