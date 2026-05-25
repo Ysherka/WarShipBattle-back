@@ -1,5 +1,3 @@
-from functools import singledispatchmethod
-
 from models.Field import BaseField, OwnField, EnemyField
 from models.FieldState import FieldState
 from models.Ship import Ship
@@ -15,6 +13,15 @@ class Game:
         self.bot: Bot | None = bot  # ◆ Композиция (Game создаёт Bot)
         self.turn: bool = True
 
+    @staticmethod
+    def check_all_ships_destroyed(field: OwnField) -> bool:
+        """Проверка, все ли корабли уничтожены"""
+        for ship in field.ships:
+            for x, y in ship.decks_coordinates:
+                if field.get_cell_display(x, y) != FieldState.DESTROYED:
+                    return False
+        return True
+
     """
     здесь инты обозначают размер корабля
     0 - пусто 
@@ -23,57 +30,57 @@ class Game:
     3 - трехпалубный
     4 - четырехпалубный
     """
-
     @staticmethod
-    def field_to_ship_list(field: list[list[int]]) -> list[Ship]:
-        if not field or not field[0]:
-            return []
+    def field_to_ship_list(grid: list[list[int]]) -> list[Ship]:
+        """
+            Преобразует двумерный массив в список объектов Ship.
 
-        rows = len(field)
-        cols = len(field[0])
-        visited = [[False] * cols for _ in range(rows)]
+            0 — пустая клетка, 1-4 — корабли соответствующей длины.
+            Корабли могут быть расположены горизонтально (RIGHT) или вертикально (DOWN).
+            """
         ships = []
+        rows = len(grid)
+        cols = len(grid[0]) if rows > 0 else 0
+        visited = [[False] * cols for _ in range(rows)]
 
-        for y in range(rows):
-            for x in range(cols):
-                if field[y][x] == 0 or visited[y][x]:
+        for r in range(rows):
+            for c in range(cols):
+                if grid[r][c] == 0 or visited[r][c]:
                     continue
 
-                length = field[y][x]
+                length = grid[r][c]
 
-                # Проверяем горизонтальное направление (вправо)
-                if x + length <= cols and all(
-                        field[y][x + i] == length and not visited[y][x + i] for i in range(length)):
-                    is_valid = True
-                    if x > 0 and field[y][x - 1] == length:
-                        is_valid = False
-                    if x + length < cols and field[y][x + length] == length:
-                        is_valid = False
+                # Проверяем горизонтальное расположение (RIGHT)
+                h_count = 1
+                cc = c + 1
+                while cc < cols and grid[r][cc] == length and not visited[r][cc]:
+                    h_count += 1
+                    cc += 1
 
-                    if is_valid:
-                        vertical_check = True
-                        for i in range(length):
-                            if y > 0 and field[y - 1][x + i] == length:
-                                vertical_check = False
-                                break
-                            if y < rows - 1 and field[y + 1][x + i] == length:
-                                vertical_check = False
-                                break
+                # Проверяем вертикальное расположение (DOWN)
+                v_count = 1
+                rr = r + 1
+                while rr < rows and grid[rr][c] == length and not visited[rr][c]:
+                    v_count += 1
+                    rr += 1
 
-                        if vertical_check:
-                            ship = Ship(x, y, length, ShipOrientation.RIGHT)
-                            ships.append(ship)
-                            for i in range(length):
-                                visited[y][x + i] = True
-                            continue
+                # Определяем ориентацию
+                if h_count > 1:
+                    orientation = ShipOrientation.RIGHT
+                    for i in range(h_count):
+                        visited[r][c + i] = True
+                    ships.append(Ship(r, c, length, orientation))
 
-                # Проверяем вертикальное направление (вниз)
-                if y + length <= rows and all(
-                        field[y + i][x] == length and not visited[y + i][x] for i in range(length)):
-                    ship = Ship(x, y, length, ShipOrientation.DOWN)
-                    ships.append(ship)
-                    for i in range(length):
-                        visited[y + i][x] = True
+                elif v_count > 1:
+                    orientation = ShipOrientation.DOWN
+                    for i in range(v_count):
+                        visited[r + i][c] = True
+                    ships.append(Ship(r, c, length, orientation))
+
+                else:
+                    # Однопалубный корабль
+                    visited[r][c] = True
+                    ships.append(Ship(r, c, length, ShipOrientation.RIGHT))
 
         return ships
 
@@ -83,8 +90,17 @@ class Game:
 
     def add_ships_int(self, field: list[list[int]]):
         ships: list[Ship] = self.field_to_ship_list(field)
+        print("ships после перевода из системы длин\n", ships)
         for ship in ships:
             self.user.own_field.add_ship(ship)
+        print(self.user.own_field.cells)
 
-    def shoot(self, row: int, col: int):
-        self.user.own_field.shoot(row, col)
+    def shoot(self, row: int, col: int) -> bool:
+        is_hit, _ = self.enemy.own_field.shoot(row, col, self.user.enemy_field)
+        self.user.enemy_field.known_cells[row][col] = True
+        return is_hit
+
+    def shoot_with_bot(self, row: int, col: int) -> bool:
+        is_hit, _ = self.bot.own_field.shoot(row, col, self.user.enemy_field)
+        self.user.enemy_field.known_cells[row][col] = True
+        return is_hit
